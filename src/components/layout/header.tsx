@@ -4,6 +4,7 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { RefreshCcw, Search } from "lucide-react";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useSyncOrders } from "@/hooks/useOrders";
@@ -42,6 +43,15 @@ export function Header() {
           <RefreshCcw className={syncMutation.isPending ? "animate-spin" : ""} />
           <span className="hidden sm:inline">Sincronizar</span>
         </Button>
+        {syncMutation.isError ? (
+          <Badge variant="destructive" className="hidden lg:inline-flex">
+            Erro no sync
+          </Badge>
+        ) : syncMutation.isSuccess ? (
+          <Badge variant="success" className="hidden lg:inline-flex">
+            Sync OK
+          </Badge>
+        ) : null}
       </div>
     </header>
   );

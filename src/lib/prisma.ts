@@ -1,17 +1,25 @@
 import { env } from "@/config/env";
 
-let prismaClient: unknown;
+type PrismaClientLike = any;
+
+const globalForPrisma = globalThis as typeof globalThis & {
+  prisma?: PrismaClientLike;
+};
 
 export async function getPrisma() {
-  if (prismaClient) {
-    return prismaClient as any;
+  if (globalForPrisma.prisma) {
+    return globalForPrisma.prisma;
   }
 
   const { PrismaClient } = await import("@prisma/client");
 
-  prismaClient = new PrismaClient({
+  const prisma = new PrismaClient({
     log: env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
   });
 
-  return prismaClient as any;
+  if (env.NODE_ENV !== "production") {
+    globalForPrisma.prisma = prisma;
+  }
+
+  return prisma;
 }

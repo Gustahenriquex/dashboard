@@ -231,8 +231,37 @@ Antes do push, confirme:
 
 Para Vercel ou similar:
 
-- Configure `DATABASE_URL` com PostgreSQL gerenciado.
-- Rode `prisma migrate deploy` no pipeline.
+- Configure `DATABASE_URL` com PostgreSQL gerenciado, por exemplo Vercel Postgres, Neon ou Supabase.
+- Rode `npm run prisma:deploy` uma vez depois de configurar o banco.
 - Cadastre `VTEX_ACCOUNT`, `VTEX_ENVIRONMENT`, `VTEX_APP_KEY`, `VTEX_APP_TOKEN` e `PAGARME_API_KEY` como secrets.
 - Mantenha `USE_MOCK_DATA=false` em producao.
 - Considere agendar `POST /api/sync/orders` via cron seguro.
+
+### Primeiro deploy na Vercel com mock
+
+Se você quer validar a interface antes das credenciais reais:
+
+```env
+USE_MOCK_DATA=true
+```
+
+Nesse modo, a aplicação não consulta VTEX, Pagar.me nem PostgreSQL para listar os dados.
+
+### Deploy real com banco
+
+1. Crie um PostgreSQL gerenciado.
+2. Configure `DATABASE_URL` na Vercel.
+3. Rode localmente ou no terminal do provedor:
+
+```bash
+npm run prisma:deploy
+```
+
+4. Configure `USE_MOCK_DATA=false`.
+5. Configure as credenciais VTEX e Pagar.me como variáveis de ambiente protegidas.
+
+Healthcheck:
+
+```bash
+curl https://SEU_DOMINIO/api/health
+```

@@ -17,6 +17,7 @@ import { MetricCard } from "@/components/dashboard/MetricCard";
 import { OrdersTable } from "@/components/orders/OrdersTable";
 import { StatusBadge } from "@/components/orders/StatusBadge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ErrorState } from "@/components/ui/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useOrders } from "@/hooks/useOrders";
 import { formatDateTime, getHoursSince } from "@/lib/order-utils";
@@ -28,6 +29,16 @@ export function DashboardClient() {
     .filter((order) => order.has48hInvoiceAlert)
     .sort((a, b) => getHoursSince(b.createdAt) - getHoursSince(a.createdAt))
     .slice(0, 5);
+
+  if (ordersQuery.isError) {
+    return (
+      <ErrorState
+        title="Dashboard indisponivel"
+        message={ordersQuery.error.message}
+        onRetry={() => void ordersQuery.refetch()}
+      />
+    );
+  }
 
   if (ordersQuery.isLoading || !metrics) {
     return (

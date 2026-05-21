@@ -6,6 +6,7 @@ import { RefreshCcw } from "lucide-react";
 import { StatusBadge } from "@/components/orders/StatusBadge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { ErrorState } from "@/components/ui/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -32,76 +33,88 @@ export function PaymentsClient() {
 
       <Card>
         <CardContent className="p-0">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Pedido</TableHead>
-                <TableHead>Cliente</TableHead>
-                <TableHead>Status Pagar.me</TableHead>
-                <TableHead>Charge</TableHead>
-                <TableHead>Valor</TableHead>
-                <TableHead>Recusa</TableHead>
-                <TableHead>Atualizacao</TableHead>
-                <TableHead className="text-right">Acao</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {ordersQuery.isLoading
-                ? Array.from({ length: 6 }).map((_, index) => (
-                    <TableRow key={index}>
-                      <TableCell colSpan={8}>
-                        <Skeleton className="h-9 w-full" />
-                      </TableCell>
-                    </TableRow>
-                  ))
-                : null}
-              {!ordersQuery.isLoading && orders.length === 0 ? (
+          {ordersQuery.isError ? (
+            <div className="p-4">
+              <ErrorState
+                title="Pagamentos indisponiveis"
+                message={ordersQuery.error.message}
+                onRetry={() => void ordersQuery.refetch()}
+              />
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={8} className="h-32 text-center text-muted-foreground">
-                    Nenhum pagamento encontrado.
-                  </TableCell>
+                  <TableHead>Pedido</TableHead>
+                  <TableHead>Cliente</TableHead>
+                  <TableHead>Status Pagar.me</TableHead>
+                  <TableHead>Charge</TableHead>
+                  <TableHead>Valor</TableHead>
+                  <TableHead>Recusa</TableHead>
+                  <TableHead>Atualizacao</TableHead>
+                  <TableHead className="text-right">Acao</TableHead>
                 </TableRow>
-              ) : null}
-              {!ordersQuery.isLoading
-                ? orders.map((order) => (
-                    <TableRow key={order.orderId}>
-                      <TableCell className="font-medium">
-                        <Link
-                          href={`/orders/${encodeURIComponent(order.orderId)}`}
-                          className="hover:text-primary"
-                        >
-                          {order.orderId}
-                        </Link>
-                      </TableCell>
-                      <TableCell>{order.clientName}</TableCell>
-                      <TableCell>
-                        <StatusBadge status={order.pagarmeStatus} />
-                      </TableCell>
-                      <TableCell>{order.payment?.chargeId ?? "-"}</TableCell>
-                      <TableCell>
-                        {formatCurrency(order.payment?.amount ?? order.totalValue)}
-                      </TableCell>
-                      <TableCell className="max-w-72">
-                        {order.payment?.refusalReason ?? "-"}
-                      </TableCell>
-                      <TableCell>{formatDateTime(order.lastSyncedAt)}</TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => resyncMutation.mutate(order.orderId)}
-                          disabled={resyncMutation.isPending}
-                          title="Consultar pagamento"
-                        >
-                          <RefreshCcw className={resyncMutation.isPending ? "animate-spin" : ""} />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                : null}
-            </TableBody>
-          </Table>
+              </TableHeader>
+              <TableBody>
+                {ordersQuery.isLoading
+                  ? Array.from({ length: 6 }).map((_, index) => (
+                      <TableRow key={index}>
+                        <TableCell colSpan={8}>
+                          <Skeleton className="h-9 w-full" />
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  : null}
+                {!ordersQuery.isLoading && orders.length === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={8} className="h-32 text-center text-muted-foreground">
+                      Nenhum pagamento encontrado.
+                    </TableCell>
+                  </TableRow>
+                ) : null}
+                {!ordersQuery.isLoading
+                  ? orders.map((order) => (
+                      <TableRow key={order.orderId}>
+                        <TableCell className="font-medium">
+                          <Link
+                            href={`/orders/${encodeURIComponent(order.orderId)}`}
+                            className="hover:text-primary"
+                          >
+                            {order.orderId}
+                          </Link>
+                        </TableCell>
+                        <TableCell>{order.clientName}</TableCell>
+                        <TableCell>
+                          <StatusBadge status={order.pagarmeStatus} />
+                        </TableCell>
+                        <TableCell>{order.payment?.chargeId ?? "-"}</TableCell>
+                        <TableCell>
+                          {formatCurrency(order.payment?.amount ?? order.totalValue)}
+                        </TableCell>
+                        <TableCell className="max-w-72">
+                          {order.payment?.refusalReason ?? "-"}
+                        </TableCell>
+                        <TableCell>{formatDateTime(order.lastSyncedAt)}</TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => resyncMutation.mutate(order.orderId)}
+                            disabled={resyncMutation.isPending}
+                            title="Consultar pagamento"
+                          >
+                            <RefreshCcw
+                              className={resyncMutation.isPending ? "animate-spin" : ""}
+                            />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  : null}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>

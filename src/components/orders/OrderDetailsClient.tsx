@@ -8,6 +8,7 @@ import { TrackingModal } from "@/components/tracking/TrackingModal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ErrorState } from "@/components/ui/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
@@ -24,6 +25,16 @@ export function OrderDetailsClient({ orderId }: { orderId: string }) {
   const orderQuery = useOrder(orderId);
   const resyncMutation = useResyncOrder();
   const order = orderQuery.data?.order;
+
+  if (orderQuery.isError) {
+    return (
+      <ErrorState
+        title="Pedido indisponivel"
+        message={orderQuery.error.message}
+        onRetry={() => void orderQuery.refetch()}
+      />
+    );
+  }
 
   if (orderQuery.isLoading || !order) {
     return (

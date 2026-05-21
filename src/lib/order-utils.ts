@@ -81,7 +81,7 @@ export function buildDashboardMetrics(orders: MonitoredOrder[]): DashboardMetric
     integrationErrors: orders.filter(hasIntegrationError).length,
     over48hWithoutInvoice: orders.filter((order) => order.has48hInvoiceAlert).length,
     withTracking: orders.filter((order) => Boolean(order.trackingCode || order.trackingUrl)).length,
-    withoutTracking: orders.filter((order) => !order.trackingCode && !order.trackingUrl).length,
+    withoutTracking: orders.filter((order) => !order.trackingCode).length,
   };
 }
 

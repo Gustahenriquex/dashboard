@@ -12,6 +12,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import { ErrorState } from "@/components/ui/error-state";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTracking } from "@/hooks/useOrders";
 import { formatDateTime } from "@/lib/order-utils";
@@ -58,7 +59,13 @@ export function TrackingModal({ order, children }: TrackingModalProps) {
           </DialogDescription>
         </DialogHeader>
 
-        {trackingQuery.isLoading ? (
+        {trackingQuery.isError ? (
+          <ErrorState
+            title="Rastreio indisponivel"
+            message={trackingQuery.error.message}
+            onRetry={() => void trackingQuery.refetch()}
+          />
+        ) : trackingQuery.isLoading ? (
           <div className="space-y-3">
             <Skeleton className="h-20 w-full" />
             <Skeleton className="h-52 w-full" />

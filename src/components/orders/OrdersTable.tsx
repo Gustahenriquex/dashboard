@@ -8,6 +8,7 @@ import { StatusBadge } from "@/components/orders/StatusBadge";
 import { TrackingModal } from "@/components/tracking/TrackingModal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { ErrorState } from "@/components/ui/error-state";
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -208,112 +209,124 @@ export function OrdersTable({ initialFilters, compact = false }: OrdersTableProp
       ) : null}
 
       <div className="rounded-lg border bg-white">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Pedido</TableHead>
-              <TableHead>Cliente</TableHead>
-              {!compact ? <TableHead>CPF/e-mail</TableHead> : null}
-              <TableHead>Criacao</TableHead>
-              <TableHead>Status VTEX</TableHead>
-              <TableHead>Status Pagar.me</TableHead>
-              <TableHead>Faturamento</TableHead>
-              {!compact ? <TableHead>NF</TableHead> : null}
-              {!compact ? <TableHead>Transportadora</TableHead> : null}
-              <TableHead>Rastreio</TableHead>
-              <TableHead>Tempo</TableHead>
-              <TableHead>Alerta</TableHead>
-              {!compact ? <TableHead>Atualizacao</TableHead> : null}
-              <TableHead className="text-right">Acoes</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {ordersQuery.isLoading ? <LoadingRows /> : null}
-            {!ordersQuery.isLoading && orders.length === 0 ? <EmptyRows /> : null}
-            {!ordersQuery.isLoading
-              ? orders.map((order) => (
-                  <TableRow key={order.orderId}>
-                    <TableCell className="font-medium">
-                      <Link
-                        href={`/orders/${encodeURIComponent(order.orderId)}`}
-                        className="hover:text-primary"
-                      >
-                        {order.orderId}
-                      </Link>
-                    </TableCell>
-                    <TableCell>
-                      <div className="max-w-44 truncate font-medium">{order.clientName}</div>
-                      <div className="text-xs text-muted-foreground">
-                        {formatCurrency(order.totalValue)}
-                      </div>
-                    </TableCell>
-                    {!compact ? (
+        {ordersQuery.isError ? (
+          <div className="p-4">
+            <ErrorState
+              title="Pedidos indisponiveis"
+              message={ordersQuery.error.message}
+              onRetry={() => void ordersQuery.refetch()}
+            />
+          </div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Pedido</TableHead>
+                <TableHead>Cliente</TableHead>
+                {!compact ? <TableHead>CPF/e-mail</TableHead> : null}
+                <TableHead>Criacao</TableHead>
+                <TableHead>Status VTEX</TableHead>
+                <TableHead>Status Pagar.me</TableHead>
+                <TableHead>Faturamento</TableHead>
+                {!compact ? <TableHead>NF</TableHead> : null}
+                {!compact ? <TableHead>Transportadora</TableHead> : null}
+                <TableHead>Rastreio</TableHead>
+                <TableHead>Tempo</TableHead>
+                <TableHead>Alerta</TableHead>
+                {!compact ? <TableHead>Atualizacao</TableHead> : null}
+                <TableHead className="text-right">Acoes</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {ordersQuery.isLoading ? <LoadingRows /> : null}
+              {!ordersQuery.isLoading && orders.length === 0 ? <EmptyRows /> : null}
+              {!ordersQuery.isLoading
+                ? orders.map((order) => (
+                    <TableRow key={order.orderId}>
+                      <TableCell className="font-medium">
+                        <Link
+                          href={`/orders/${encodeURIComponent(order.orderId)}`}
+                          className="hover:text-primary"
+                        >
+                          {order.orderId}
+                        </Link>
+                      </TableCell>
                       <TableCell>
-                        <div className="max-w-48 truncate">{order.clientEmail ?? "-"}</div>
+                        <div className="max-w-44 truncate font-medium">{order.clientName}</div>
                         <div className="text-xs text-muted-foreground">
-                          {order.clientDocument ?? "-"}
+                          {formatCurrency(order.totalValue)}
                         </div>
                       </TableCell>
-                    ) : null}
-                    <TableCell>{formatDateTime(order.createdAt)}</TableCell>
-                    <TableCell>
-                      <StatusBadge status={order.vtexStatus} />
-                    </TableCell>
-                    <TableCell>
-                      <StatusBadge status={order.pagarmeStatus} />
-                    </TableCell>
-                    <TableCell>
-                      <StatusBadge status={getInvoiceStatus(order)} />
-                    </TableCell>
-                    {!compact ? <TableCell>{order.invoiceNumber ?? "-"}</TableCell> : null}
-                    {!compact ? <TableCell>{order.carrierName ?? "-"}</TableCell> : null}
-                    <TableCell>
-                      <TrackingCell order={order} />
-                    </TableCell>
-                    <TableCell>{getHoursSince(order.createdAt)}h</TableCell>
-                    <TableCell>
-                      {order.has48hInvoiceAlert ? (
-                        <Badge variant="destructive">+48h sem faturamento</Badge>
-                      ) : (
-                        <span className="text-muted-foreground">-</span>
-                      )}
-                    </TableCell>
-                    {!compact ? <TableCell>{formatDateTime(order.lastSyncedAt)}</TableCell> : null}
-                    <TableCell>
-                      <div className="flex justify-end gap-1">
-                        <Button asChild variant="ghost" size="icon" title="Ver detalhes">
-                          <Link href={`/orders/${encodeURIComponent(order.orderId)}`}>
-                            <Eye />
-                          </Link>
-                        </Button>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          title="Consultar pagamento"
-                          onClick={() => resyncMutation.mutate(order.orderId)}
-                          disabled={resyncMutation.isPending}
-                        >
-                          {resyncMutation.isPending ? (
-                            <RefreshCcw className="animate-spin" />
-                          ) : (
-                            <CreditCard />
-                          )}
-                        </Button>
-                        {order.trackingUrl ? (
-                          <Button asChild variant="ghost" size="icon" title="Abrir rastreio">
-                            <a href={order.trackingUrl} target="_blank" rel="noreferrer">
-                              <ExternalLink />
-                            </a>
+                      {!compact ? (
+                        <TableCell>
+                          <div className="max-w-48 truncate">{order.clientEmail ?? "-"}</div>
+                          <div className="text-xs text-muted-foreground">
+                            {order.clientDocument ?? "-"}
+                          </div>
+                        </TableCell>
+                      ) : null}
+                      <TableCell>{formatDateTime(order.createdAt)}</TableCell>
+                      <TableCell>
+                        <StatusBadge status={order.vtexStatus} />
+                      </TableCell>
+                      <TableCell>
+                        <StatusBadge status={order.pagarmeStatus} />
+                      </TableCell>
+                      <TableCell>
+                        <StatusBadge status={getInvoiceStatus(order)} />
+                      </TableCell>
+                      {!compact ? <TableCell>{order.invoiceNumber ?? "-"}</TableCell> : null}
+                      {!compact ? <TableCell>{order.carrierName ?? "-"}</TableCell> : null}
+                      <TableCell>
+                        <TrackingCell order={order} />
+                      </TableCell>
+                      <TableCell>{getHoursSince(order.createdAt)}h</TableCell>
+                      <TableCell>
+                        {order.has48hInvoiceAlert ? (
+                          <Badge variant="destructive">+48h sem faturamento</Badge>
+                        ) : (
+                          <span className="text-muted-foreground">-</span>
+                        )}
+                      </TableCell>
+                      {!compact ? (
+                        <TableCell>{formatDateTime(order.lastSyncedAt)}</TableCell>
+                      ) : null}
+                      <TableCell>
+                        <div className="flex justify-end gap-1">
+                          <Button asChild variant="ghost" size="icon" title="Ver detalhes">
+                            <Link href={`/orders/${encodeURIComponent(order.orderId)}`}>
+                              <Eye />
+                            </Link>
                           </Button>
-                        ) : null}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
-              : null}
-          </TableBody>
-        </Table>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="icon"
+                            title="Consultar pagamento"
+                            onClick={() => resyncMutation.mutate(order.orderId)}
+                            disabled={resyncMutation.isPending}
+                          >
+                            {resyncMutation.isPending ? (
+                              <RefreshCcw className="animate-spin" />
+                            ) : (
+                              <CreditCard />
+                            )}
+                          </Button>
+                          {order.trackingUrl ? (
+                            <Button asChild variant="ghost" size="icon" title="Abrir rastreio">
+                              <a href={order.trackingUrl} target="_blank" rel="noreferrer">
+                                <ExternalLink />
+                              </a>
+                            </Button>
+                          ) : null}
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))
+                : null}
+            </TableBody>
+          </Table>
+        )}
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
