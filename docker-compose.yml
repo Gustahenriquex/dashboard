@@ -1,0 +1,31 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: sac-vtex-monitor-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: sac_vtex_monitor
+      POSTGRES_USER: sac_user
+      POSTGRES_PASSWORD: sac_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sac_user -d sac_vtex_monitor"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  adminer:
+    image: adminer:4
+    container_name: sac-vtex-monitor-adminer
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
